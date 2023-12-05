@@ -7,6 +7,39 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from urllib.parse import urlparse, parse_qs
 
+import dns.resolver
+resolver = dns.resolver.Resolver(configure=False)
+resolver.nameservers = ['8.8.8.8']
+
+# Define a custom Session class
+class MySession(requests.Session):
+    # Override the init method to add a hosts attribute
+    def __init__(self, hosts=None, *args, **kwargs):
+        super(MySession, self).__init__(*args, **kwargs)
+        # If hosts is not given, use an empty dictionary
+        if hosts is None:
+            hosts = {}
+        self.hosts = hosts
+
+    # Override the request method to use the hosts attribute
+    def request(self, method, url, *args, **kwargs):
+        # Parse the url to get the host name
+        print(requests.utils.urlparse(url))
+        scheme, netloc, path, params, query, fragment = requests.utils.urlparse(url)
+        # If the host name is in the hosts dictionary, replace it with the IP address
+        if netloc in self.hosts:
+            url = requests.utils.urlunparse((scheme, self.hosts[netloc], path, params, query, fragment))
+            # Add the original host name to the headers
+            headers = kwargs.setdefault('headers', {})
+            headers['Host'] = netloc
+        # Call the original request method
+        return super(MySession, self).request(method, url, *args, **kwargs)
+    
+def get_ip(url):
+        return str(resolver.resolve(url)[0])
+    
+# Create a custom Session object with a hosts dictionary
+session = MySession(hosts={'update.miui.com': get_ip('update.miui.com'), "account.xiaomi.com": get_ip("account.xiaomi.com")})
 
 # 常量
 MIUI_UPDATE_URL = "https://update.miui.com/updates/miotaV3.php"
@@ -80,7 +113,7 @@ def miui_decrypt(encrypted_text, securityKey):
 # 获取返回参数
 def request(data):
     try:
-        response = requests.post(url=MIUI_UPDATE_URL, data=data)
+        response = session.post(url=MIUI_UPDATE_URL, data=data, verify=False)
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:
@@ -159,7 +192,7 @@ def login():
     Hash = md5.hexdigest()
     sha1 = hashlib.sha1()
     url1 = "https://account.xiaomi.com/pass/serviceLogin"
-    response1 = requests.get(url1, allow_redirects=False)
+    response1 = session.get(url1, allow_redirects=False, verify=False)
     url2 = response1.headers["Location"]
     parsed_url = urlparse(url2)
     params = parse_qs(parsed_url.query)
