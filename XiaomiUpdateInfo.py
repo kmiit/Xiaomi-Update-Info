@@ -39,7 +39,7 @@ def get_ip(url):
         return str(resolver.resolve(url)[0])
     
 # Create a custom Session object with a hosts dictionary
-session = MySession(hosts={'update.miui.com': get_ip('update.miui.com'), "account.xiaomi.com": get_ip("account.xiaomi.com")})
+session = MySession(hosts={'update.miui.com': get_ip('update.miui.com'), "account.xiaomi.com": get_ip("account.xiaomi.com"), "api.account.xiaomi.com": get_ip("api.account.xiaomi.com")})
 
 # 常量
 MIUI_UPDATE_URL = "https://update.miui.com/updates/miotaV3.php"
@@ -184,9 +184,6 @@ def choose(name, interface):
 
 # 获取 Cookie
 def login():
-    headers = {
-        "Host": "account.xiaomi.com"
-    }
     account = input("账号：")
     password = getpass.getpass("密码：")
     print(f"{account}：登录中...")
@@ -195,7 +192,7 @@ def login():
     Hash = md5.hexdigest()
     sha1 = hashlib.sha1()
     url1 = "https://account.xiaomi.com/pass/serviceLogin"
-    response1 = session.get(url1, allow_redirects=False, verify=False, headers=headers)
+    response1 = session.get(url1, allow_redirects=False, verify=False)
     url2 = response1.headers["Location"]
     parsed_url = urlparse(url2)
     params = parse_qs(parsed_url.query)
@@ -212,9 +209,8 @@ def login():
         "_locale": "zh_CN",
     }
     response2 = (
-        session.post(url=url3, data=data, verify=False, headers=headers).text.lstrip("&").lstrip("START").lstrip("&")
+        session.post(url=url3, data=data, verify=False).text.lstrip("&").lstrip("START").lstrip("&")
     )
-    print(response2)
     Auth = json.loads(response2)
     ssecurity = Auth["ssecurity"]
     userId = Auth["userId"]
@@ -229,7 +225,7 @@ def login():
         .strip()
     )
     nurl = Auth["location"] + "&_userIdNeedEncrypt=true&clientSign=" + clientSign
-    cookies_dict = requests.utils.dict_from_cookiejar(session.get(url=nurl, verify=False, headers=headers).cookies)
+    cookies_dict = requests.utils.dict_from_cookiejar(session.get(url=nurl, verify=False).cookies)
     serviceToken = cookies_dict["serviceToken"]
     data = {"userId": userId, "ssecurity": ssecurity, "serviceToken": serviceToken}
     json_data = json.dumps(data, ensure_ascii=False, indent=4)
