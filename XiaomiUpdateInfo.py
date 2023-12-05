@@ -24,7 +24,6 @@ class MySession(requests.Session):
     # Override the request method to use the hosts attribute
     def request(self, method, url, *args, **kwargs):
         # Parse the url to get the host name
-        print(requests.utils.urlparse(url))
         scheme, netloc, path, params, query, fragment = requests.utils.urlparse(url)
         # If the host name is in the hosts dictionary, replace it with the IP address
         if netloc in self.hosts:
