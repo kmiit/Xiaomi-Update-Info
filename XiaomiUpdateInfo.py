@@ -209,7 +209,7 @@ def login():
         "_locale": "zh_CN",
     }
     response2 = (
-        session.post(url=url3, data=data).text.lstrip("&").lstrip("START").lstrip("&")
+        session.post(url=url3, data=data, verify=False).text.lstrip("&").lstrip("START").lstrip("&")
     )
     Auth = json.loads(response2)
     ssecurity = Auth["ssecurity"]
@@ -225,7 +225,7 @@ def login():
         .strip()
     )
     nurl = Auth["location"] + "&_userIdNeedEncrypt=true&clientSign=" + clientSign
-    cookies_dict = requests.utils.dict_from_cookiejar(requests.get(url=nurl).cookies)
+    cookies_dict = requests.utils.dict_from_cookiejar(session.get(url=nurl, verify=False).cookies)
     serviceToken = cookies_dict["serviceToken"]
     data = {"userId": userId, "ssecurity": ssecurity, "serviceToken": serviceToken}
     json_data = json.dumps(data, ensure_ascii=False, indent=4)
