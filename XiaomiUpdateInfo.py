@@ -11,6 +11,10 @@ import dns.resolver
 resolver = dns.resolver.Resolver(configure=False)
 resolver.nameservers = ['8.8.8.8']
 
+from requests.packages import urllib3
+import warnings
+warnings.filterwarnings("ignore", category=urllib3.exceptions.InsecureRequestWarning)
+
 # Define a custom Session class
 class MySession(requests.Session):
     # Override the init method to add a hosts attribute
