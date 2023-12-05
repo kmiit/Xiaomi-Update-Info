@@ -209,7 +209,7 @@ def login():
         "_locale": "zh_CN",
     }
     response2 = (
-        requests.post(url=url3, data=data).text.lstrip("&").lstrip("START").lstrip("&")
+        session.post(url=url3, data=data).text.lstrip("&").lstrip("START").lstrip("&")
     )
     Auth = json.loads(response2)
     ssecurity = Auth["ssecurity"]
